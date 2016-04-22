@@ -1,0 +1,2 @@
+defmodule CoapNode do
+end
