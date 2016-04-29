@@ -1,20 +1,26 @@
-# CoapNode
+To be used in conjunction with [CoapDirectory](https://github.com/mskv/coap_directory). It mocks an IoT setup where many CoAP nodes register their resources at one CoAP directory.
 
-**TODO: Add description**
+```
+~/coap_directory> iex -S mix
+iex(1)>
 
-## Installation
+~/coap_node> COAP_PORT=50000 iex -S mix
+iex(1)> CoapNode.Resources.Switch.start(["switches", "1"], [])
+:ok
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
+~/coap_directory>
+iex(1)> CoapDirectory.Client.get("switches/1") |> Task.await()
+{:ok, :content, {:coap_content, :undefined, 60, :undefined, "switches/1 off"}}
+iex(2)> CoapDirectory.Client.put("switches/1", "toggle") |> Task.await()
+{:ok, :changed, {:coap_content, :undefined, 60, :undefined, ""}}
+iex(3)> CoapDirectory.Client.get("switches/1") |> Task.await()
+{:ok, :content, {:coap_content, :undefined, 60, :undefined, "switches/1 on"}}
 
-  1. Add coap_node to your list of dependencies in `mix.exs`:
-
-        def deps do
-          [{:coap_node, "~> 0.0.1"}]
-        end
-
-  2. Ensure coap_node is started before your application:
-
-        def application do
-          [applications: [:coap_node]]
-        end
-
+iex(4)> CoapDirectory.ObserverSupervisor.start_observer("switches/1", self())
+{:ok, #PID<0.288.0>}
+iex(5)> CoapDirectory.Client.put("switches/1", "toggle") |> Task.await()
+{:ok, :changed, {:coap_content, :undefined, 60, :undefined, ""}}
+iex(6)> flush()
+"switches/1 off"
+:ok
+```
